@@ -4,12 +4,85 @@ const express = require('express')
 const router = express.Router()
 const { protect } = require('../middleware/auth')
 const Analysis = require('../models/Analysis')
+const upload = require('../config/multer')
+const { extractTextFromPDF } = require('../services/pdfService')
 
 // ─────────────────────────────────────────
 // @route   GET /api/analysis/history
 // @desc    Get all analyses for logged in user
 // @access  Private
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// @route   POST /api/analysis/analyze
+// @desc    Upload resume + analyze against job description
+// @access  Private
+// ─────────────────────────────────────────
+router.post('/analyze', protect, upload.single('resume'), async (req, res) => {
+  try {
+    // 1. Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload a PDF resume'
+      })
+    }
+
+    // 2. Check if job description was provided
+    const { jobDescription, jobTitle, companyName } = req.body
+    if (!jobDescription) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a job description'
+      })
+    }
+
+    // 3. Extract text from PDF
+    console.log('Extracting text from PDF...')
+    const pdfResult = await extractTextFromPDF(req.file.path)
+
+    if (!pdfResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: 'Could not read PDF file. Please ensure it is a valid PDF.',
+        error: pdfResult.error
+      })
+    }
+
+    const resumeText = pdfResult.text
+
+    // 4. Validate extracted text
+    if (resumeText.length < 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Resume appears to be empty or unreadable. Please try a different PDF.'
+      })
+    }
+
+    console.log(`Resume extracted: ${pdfResult.wordCount} words, ${pdfResult.pages} pages`)
+
+    // 5. For now — return the extracted text
+    // (AI analysis comes in next step!)
+    res.status(200).json({
+      success: true,
+      message: 'Resume uploaded and text extracted successfully!',
+      data: {
+        wordCount: pdfResult.wordCount,
+        pages: pdfResult.pages,
+        resumePreview: resumeText.substring(0, 500) + '...',
+        jobTitle: jobTitle || 'Position',
+        companyName: companyName || 'Company'
+      }
+    })
+
+  } catch (error) {
+    console.error('Analysis error:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Server error during analysis',
+      error: error.message
+    })
+  }
+})
 router.get('/history', protect, async (req, res) => {
   try {
     // Find all analyses belonging to this user
