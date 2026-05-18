@@ -94,12 +94,16 @@ const AnalysisSchema = new mongoose.Schema(
     atsSuggestions: [String],
 
     atsPassedChecks: {
-      hasEmail: { type: Boolean, default: false },
-      hasPhone: { type: Boolean, default: false },
-      hasDates: { type: Boolean, default: false },
-      hasSections: { type: Boolean, default: false },
-      goodLength: { type: Boolean, default: false }
-    },
+  hasEmail:       { type: Boolean, default: false },
+  hasPhone:       { type: Boolean, default: false },
+  hasDates:       { type: Boolean, default: false },
+  hasSections:    { type: Boolean, default: false },
+  goodLength:     { type: Boolean, default: false },
+  hasActionVerbs: { type: Boolean, default: false },
+  noSpecialChars: { type: Boolean, default: false },
+  hasMetrics:     { type: Boolean, default: false },
+  hasProfileLink: { type: Boolean, default: false }
+},
 
     aiProvider: {
       type: String,
