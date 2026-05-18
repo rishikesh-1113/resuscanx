@@ -48,7 +48,6 @@ const analyzeResume = async (resumeText, jobDescription) => {
 
     // 3. Parse the JSON response
     console.log('Parsing AI response...')
-    console.log('RAW TEXT FROM AI:', text.substring(0, 500))  // ← add this
     const rawAnalysis = parseAIResponse(text)
 
     // 4. Enhance skills with our own extractor

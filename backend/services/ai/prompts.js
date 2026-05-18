@@ -9,7 +9,7 @@ You are an expert recruiter and hiring manager with 15 years of experience.
 Analyze this resume against the job description and provide a detailed assessment.
 
 RESUME:
-${resumeText}
+${resumeText.substring(0, 4000)}
 
 JOB DESCRIPTION:
 ${jobDescription}
