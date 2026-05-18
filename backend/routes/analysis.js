@@ -185,23 +185,10 @@ router.get('/:id', protect, async (req, res) => {
       })
     }
 
-    const data = analysis.toObject()
-
-res.status(200).json({
-  success: true,
-  analysis: {
-    ...data,
-    strengths: data.analysis?.strengths || [],
-    gaps: data.analysis?.gaps || [],
-    recommendations: data.analysis?.recommendations || [],
-    summary: data.analysis?.summary || '',
-    experienceLevel: data.analysis?.experienceLevel || 'mid',
-    hiringDecision: data.analysis?.hiringDecision || 'MAYBE',
-    redFlags: data.analysis?.redFlags || [],
-    interviewQuestions: data.analysis?.interviewQuestions || [],
-    scoringDetails: data.analysis?.scoringDetails || {}
-  }
-})
+    res.status(200).json({
+      success: true,
+      analysis
+    })
 
   } catch (error) {
     res.status(500).json({
