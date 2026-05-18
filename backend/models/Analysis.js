@@ -4,39 +4,32 @@ const mongoose = require('mongoose')
 
 const AnalysisSchema = new mongoose.Schema(
   {
-    // Which user does this analysis belong to?
-    // ref: 'User' creates a relationship between collections
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
     },
 
-    // Original resume text (extracted from PDF)
     resumeText: {
       type: String,
       required: true
     },
 
-    // Job description the user wants to match against
     jobDescription: {
       type: String,
       required: true
     },
 
-    // Job title extracted from job description
     jobTitle: {
       type: String,
       default: 'Position'
     },
 
-    // Company name if found in job description
     companyName: {
       type: String,
       default: 'Company'
     },
 
-    // Overall match score 0-100
     matchScore: {
       type: Number,
       required: true,
@@ -44,51 +37,41 @@ const AnalysisSchema = new mongoose.Schema(
       max: 100
     },
 
-    // Detailed AI analysis
+    // Nested analysis object from AI
     analysis: {
-      // What the resume does well for this role
       strengths: [String],
-
-      // What's missing or weak
       gaps: [String],
-
-      // Specific improvements suggested
       recommendations: [String],
-
-      // entry / junior / mid / senior
+      redFlags: [String],
+      interviewQuestions: [String],
       experienceLevel: {
         type: String,
         enum: ['entry', 'junior', 'mid', 'senior'],
         default: 'mid'
       },
-
-      // Final hiring recommendation
       hiringDecision: {
         type: String,
         enum: ['HIRE', 'MAYBE', 'REJECT'],
         default: 'MAYBE'
       },
-
-      // Summary paragraph
       summary: {
         type: String,
         default: ''
+      },
+      scoringDetails: {
+        originalScore: Number,
+        finalScore: Number,
+        penalties: [String],
+        bonuses: [String]
       }
     },
 
-    // Skills breakdown
     skills: {
-      // Skills in resume that match job description
       matched: [String],
-
-      // Skills required but missing from resume
       missing: [String],
-
-      // Extra skills that are a bonus
       bonus: [String]
     },
 
-    // ATS compatibility score
     atsScore: {
       type: Number,
       default: 0,
@@ -96,25 +79,35 @@ const AnalysisSchema = new mongoose.Schema(
       max: 100
     },
 
-    // ATS issues found
+    atsRating: {
+      type: String,
+      default: 'Unknown'
+    },
+
+    atsKeywordMatch: {
+      type: Number,
+      default: 0
+    },
+
     atsIssues: [String],
 
-    // ATS improvements suggested
     atsSuggestions: [String],
 
-    // Which AI provider gave the analysis
+    atsPassedChecks: {
+      hasEmail: { type: Boolean, default: false },
+      hasPhone: { type: Boolean, default: false },
+      hasDates: { type: Boolean, default: false },
+      hasSections: { type: Boolean, default: false },
+      goodLength: { type: Boolean, default: false }
+    },
+
     aiProvider: {
       type: String,
       default: 'gemini'
     }
   },
-
-  // Second argument to Schema — options
   {
     timestamps: true
-    // Automatically adds:
-    // createdAt — when analysis was created
-    // updatedAt — when it was last modified
   }
 )
 
