@@ -64,6 +64,9 @@ SCORING GUIDE (be realistic, not generous):
 Be honest and realistic. Most resumes score 40-75.
 Never give 100. Consider experience gaps harshly.
 Missing must-have skills should severely impact score.
+
+CRITICAL: interviewQuestions array MUST have exactly 3 questions. Never return an empty array for this field. Generate questions based on the gaps and missing skills found.
+
 `
 }
 
@@ -72,23 +75,38 @@ Missing must-have skills should severely impact score.
 // ─────────────────────────────────────────
 const buildChatPrompt = (analysisData, userMessage, chatHistory) => {
   return `
-You are a helpful career advisor discussing a resume analysis result.
+You are a helpful AI career advisor.
+You have access to the user's resume analysis results below.
+Give specific, actionable advice based on THEIR data.
+Be encouraging but realistic.
+Keep responses under 200 words.
+Use simple, clear language.
 
-ANALYSIS CONTEXT:
+THEIR ANALYSIS RESULTS:
+─────────────────────────
 Match Score: ${analysisData.matchScore}%
 Hiring Decision: ${analysisData.analysis.hiringDecision}
 Experience Level: ${analysisData.analysis.experienceLevel}
-Strengths: ${analysisData.analysis.strengths.join(', ')}
-Gaps: ${analysisData.analysis.gaps.join(', ')}
-Missing Skills: ${analysisData.skills.missing.join(', ')}
+Job Title: ${analysisData.jobTitle}
+Company: ${analysisData.companyName}
 
-CHAT HISTORY:
-${chatHistory.map(m => `${m.role}: ${m.content}`).join('\n')}
+Strengths: ${analysisData.analysis.strengths?.join(', ')}
+Gaps: ${analysisData.analysis.gaps?.join(', ')}
+Missing Skills: ${analysisData.skills?.missing?.join(', ')}
+Matched Skills: ${analysisData.skills?.matched?.join(', ')}
+ATS Score: ${analysisData.atsScore}%
+─────────────────────────
 
-USER QUESTION: ${userMessage}
+CONVERSATION SO FAR:
+${chatHistory.length > 0
+    ? chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n')
+    : 'No previous messages'
+  }
 
-Provide helpful, specific advice based on the analysis above.
-Be encouraging but realistic. Keep response under 200 words.
+USER NOW ASKS: ${userMessage}
+
+Respond as a knowledgeable career advisor.
+Reference their specific scores and skills when relevant.
 `
 }
 

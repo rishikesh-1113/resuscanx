@@ -13,21 +13,20 @@ const callGemini = async (prompt) => {
   if (!apiKey) throw new Error('Gemini API key not configured')
 
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
     {
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
+      contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,      // lower = more consistent
-        maxOutputTokens: 2048  // enough for full analysis
+        temperature: 0.3,
+        maxOutputTokens: 8192
+        // ← responseMimeType removed — was forcing JSON on chat responses too
       }
     },
     { timeout: TIMEOUT }
   )
 
-  // Extract text from Gemini response structure
-  const text = response.data.candidates[0].content.parts[0].text
+  let text = response.data.candidates[0].content.parts[0].text
+  text = text.replace(/```json/gi, '').replace(/```/g, '').trim()
   return text
 }
 
@@ -66,10 +65,10 @@ const callCohere = async (prompt) => {
   if (!apiKey) throw new Error('Cohere API key not configured')
 
   const response = await axios.post(
-    'https://api.cohere.ai/v1/generate',
+    'https://api.cohere.com/v2/chat',
     {
-      model: 'command',
-      prompt: prompt,
+      model: 'command-r-plus-08-2024',
+      messages: [{ role: 'user', content: prompt }],
       max_tokens: 2048,
       temperature: 0.3
     },
@@ -82,7 +81,7 @@ const callCohere = async (prompt) => {
     }
   )
 
-  return response.data.generations[0].text
+  return response.data.message.content[0].text
 }
 
 // ─────────────────────────────────────────
@@ -95,7 +94,7 @@ const callOpenRouter = async (prompt) => {
   const response = await axios.post(
     'https://openrouter.ai/api/v1/chat/completions',
     {
-      model: 'mistralai/mistral-7b-instruct:free',
+      model: 'openai/gpt-oss-20b:free',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 2048,
       temperature: 0.3
@@ -105,7 +104,7 @@ const callOpenRouter = async (prompt) => {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://localhost:12001',
-        'X-Title': 'ResuScanX'
+        'X-Title': 'HireMatch'
       },
       timeout: TIMEOUT
     }
@@ -119,12 +118,12 @@ const callOpenRouter = async (prompt) => {
 // ─────────────────────────────────────────
 const callAIWithFailover = async (prompt) => {
   // Define providers in priority order
-  const providers = [
-    { name: 'gemini',     fn: callGemini },
-    { name: 'mistral',    fn: callMistral },
-    { name: 'cohere',     fn: callCohere },
-    { name: 'openrouter', fn: callOpenRouter }
-  ]
+const providers = [
+  { name: 'mistral',    fn: callMistral },
+  { name: 'gemini',     fn: callGemini },
+  { name: 'cohere',     fn: callCohere },
+  { name: 'openrouter', fn: callOpenRouter }
+]
 
   let lastError = null
 
@@ -143,7 +142,7 @@ const callAIWithFailover = async (prompt) => {
       }
 
     } catch (error) {
-      console.log(`❌ ${provider.name} failed: ${error.message}`)
+ console.log(`❌ ${provider.name} failed: ${error.response?.data?.error?.message || error.message}`)
       lastError = error
       // Continue to next provider
     }
